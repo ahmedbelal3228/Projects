@@ -40,7 +40,7 @@ string replaceString(string inputString, string targetWord, string replacementWo
     }
 
     string s2 = inputString; // Create a copy to preserve the original input
-    size_t pos = 0; // Start search from the beginning
+    size_t pos = 0;          // Start search from the beginning
 
     // Loop to find and replace all occurrences
     while ((pos = s2.find(targetWord, pos)) != string::npos)
@@ -49,12 +49,16 @@ string replaceString(string inputString, string targetWord, string replacementWo
         pos += replacementWord.length(); // Move past the replaced word to continue searching
     }
 
+    if (inputString == s2)
+        cout << "Target word not found. No replacements made." << endl;
+
     return s2;
 }
 
 // Prints the input, replacement action, and output in a clean structured format
 void printReplacementResult(string inputString, string targetWord, string replacementWord, string outputString)
 {
+    cout << "- - - - - - - - - - - - - \n";
     // Construct clear replacement statement for display
     string replacingStatement = "[" + targetWord + "] with [" + replacementWord + "]...";
     if (targetWord.empty())
