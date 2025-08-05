@@ -19,7 +19,7 @@ using namespace std;
       - Clear and maintainable code formatting
       - User interaction & formatted console output
 
-    Author: [Your Name]
+    Author: [Ahmed Belal]
     Date:   [YYYY-MM-DD]
 */
 
