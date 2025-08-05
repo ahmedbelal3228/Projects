@@ -20,7 +20,7 @@ using namespace std;
       - User interaction & formatted console output
 
     Author: [Ahmed Belal]
-    Date:   [YYYY-MM-DD]
+
 */
 
 struct sDate
