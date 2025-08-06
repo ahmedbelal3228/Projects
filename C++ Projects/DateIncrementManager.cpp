@@ -219,13 +219,13 @@ sDate convertDaysToDate(long Days)
 
     // --- MONTHS ---
     // Subtract complete months from the remaining days.
-    // We increment month and adjust the year when passing December.
+    // We decrement month and adjust the year when passing December.
     while (Days > daysInMonth(standardDate.year, standardDate.month))
     {
         Days -= daysInMonth(standardDate.year, standardDate.month);
         standardDate.month++;
 
-        // Wrap month > 12 back to January and increment year
+        // Wrap month > 12 back to January and decrement year
         if (standardDate.month > 12)
         {
             standardDate.month = 1;
@@ -234,12 +234,33 @@ sDate convertDaysToDate(long Days)
     }
 
     // --- DAYS ---
-    // Whatever remains is the leftover days after full years and months are removed.
-    standardDate.day = Days;
+    // Determine the remaining day in the final month after full years and months are subtracted.
+    if (Days == 0)
+    {
+        // If remaining days == 0, it means we need to roll back to the last day of the previous month
+        standardDate.month--;
+
+        // If the month rolls back past January, wrap to December and decrease the year
+        if (standardDate.month < 1)
+        {
+            standardDate.month = 12;
+            standardDate.year--;
+        }
+
+        // Set day to the last valid day of the adjusted month
+        standardDate.day = daysInMonth(standardDate.year, standardDate.month);
+    }
+    else
+    {
+        // If remaining days > 0, simply assign as the current day of the month
+        standardDate.day = Days;
+    }
+
     date = standardDate;
 
     return date;
 }
+
 
 // *********************************** INCREASING DATE ************************************
 // ************************************************************************************************************************
@@ -261,16 +282,18 @@ struct sAddedXValToDate
     int xYears = 0;
 };
 
+// Adds a number of days to the current date.
+// Logic: Convert the date to total days since 1/1/0001, add xDays, then convert back.
 sDate increaseDateByXDays(sDate &date, int xDays)
 {
-
     long Days = countDaysInDate(date);
-
     long totalDays = Days + xDays;
     date = convertDaysToDate(totalDays);
     return date;
 }
 
+// Adds a number of weeks to the current date.
+// Logic: Convert weeks to days (weeks * 7), then reuse the days function.
 sDate increaseDateByXWeeks(sDate &date, int xWeeks)
 {
     int xDays = xWeeks * 7;
@@ -278,29 +301,40 @@ sDate increaseDateByXWeeks(sDate &date, int xWeeks)
     return date;
 }
 
+// Adds a number of months to the current date.
+// Logic: Increment month step by step and handle month/year rollover.
 sDate increaseDateByXMonths(sDate &date, int xMonths)
 {
-
     for (int month = 1; month <= xMonths; ++month)
     {
-        date.month++;
 
-        if (date.month > 12)
+        date.month++;
+        if (date.month > 12) // Rollover: month > December wraps to January
         {
             date.month = 1;
-            date.year++;
+            date.year++; // Move to the next year
         }
     }
 
+    // Adjust the day if it’s greater than the days in the new month
+    short maxDaysInMonth = daysInMonth(date.year, date.month);
+    if (date.day > maxDaysInMonth)
+    {
+        date.day = maxDaysInMonth;
+    }
     return date;
 }
 
+// Adds a number of years to the current date.
 sDate increaseDateByXYears(sDate &date, int xYears)
 {
 
-    for (int year = 1; year <= xYears; ++year)
+    date.year += xYears;
+
+    // Handles leap year adjustment if starting from Feb 29.
+    if (date.month == 2)
     {
-        date.year++;
+        date.day = (isLeapYear(date.year)) ? 29 : 28;
     }
     return date;
 }
@@ -404,7 +438,7 @@ void compareOldAndNewDate(const sDate oldDate, const sDate newDate, const sAdded
     cout << "•Updated Date   : ";
     printDate(newDate);
 
-    cout << "\n•Added Values: \n"
+    cout << "\n•Increased Values: \n"
          << "["
          << xVal.xYears << "] Year(s)\n"
          << "["
@@ -434,7 +468,7 @@ void runDateIncrementManager(const sDate date, sDate &newDate, sAddedXValToDate 
 
         if (enChoice != Exit)
         {
-            if (!isSure("Do you want continue adding on the date: "))
+            if (!isSure("Would you like to apply more changes to the date? (y/n): "))
             {
                 break;
             }
@@ -446,6 +480,8 @@ void runDateIncrementManager(const sDate date, sDate &newDate, sAddedXValToDate 
 
     compareOldAndNewDate(date, newDate, xVal);
 }
+
+
 int main()
 {
     cout << "\nPlease Enter Date You Want To Increment: \n";
