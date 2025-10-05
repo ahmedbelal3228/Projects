@@ -14,6 +14,7 @@
 #include <vector>
 #include <string>
 #include <limits>
+#include <algorithm>
 using namespace std;
 
 //====================================================================================================
@@ -112,6 +113,16 @@ long convertDateToDays(const sDate &date)
 //====================================================================================================
 // Key Functions
 
+// Returns true if date1 is earlier than date2
+bool isD1EarlierThanD2(sDate date1, sDate date2)
+{
+    if (date1.year != date2.year)
+        return date1.year < date2.year;
+    if (date1.month != date2.month)
+        return date1.month < date2.month;
+    return date1.day < date2.day;
+}
+
 // Calculates the weekday index (1 = Sunday, 7 = Saturday) using Zeller's Congruence
 short getDayOrderAtWeek(const sDate &date)
 {
@@ -133,6 +144,20 @@ string getDayName(const sDate &date)
     int dayOrder = getDayOrderAtWeek(date) - 1;
     string dayName = days[dayOrder];
     return dayName;
+}
+
+bool isWeekend(const sDate &date)
+{
+    string dayName = getDayName(date);
+    if (dayName == "Friday" || dayName == "Saturday")
+        return true;
+
+    return false;
+}
+
+bool isBusinessDay(const sDate &date)
+{
+    return !isWeekend(date);
 }
 
 void increaseDateByOneDay(sDate &date)
@@ -158,23 +183,22 @@ void increaseDateByOneDay(sDate &date)
         date.day++;
 }
 
-int countBusinessVacationDays(sDate date, int BulkDays)
+short CalcVacationDays(sDate from, sDate to)
 {
-    int LeanDays = 0;
+    if (!isD1EarlierThanD2(from, to))
+        swap(from, to);
 
-    for (int i = 1; i <= BulkDays; i++)
+    short daysCount = 0;
+    while (isD1EarlierThanD2(from, to))
     {
-        string dayName = getDayName(date);
-        if (!(dayName == "Saturday" || dayName == "Friday"))
-        {
-            LeanDays++;
-        }
-        increaseDateByOneDay(date);
+
+        if (isBusinessDay(from))
+            daysCount++;
+
+        increaseDateByOneDay(from);
     }
-
-    return LeanDays;
+    return daysCount;
 }
-
 //====================================================================================================
 
 int main()
@@ -192,7 +216,7 @@ int main()
 
     long daysOfDate1 = convertDateToDays(date1);
     long daysOfDate2 = convertDateToDays(date2);
-    long dayBetweenTwoDates = daysOfDate2 - daysOfDate1;
+    short dayBetweenTwoDates = daysOfDate2 - daysOfDate1;
 
     string date1Name = getDayName(date1);
     string date2Name = getDayName(date2);
@@ -205,10 +229,10 @@ int main()
     printDate(date2);
     cout << "-----------------------------------\n";
 
-    int leanDays = countBusinessVacationDays(date1, dayBetweenTwoDates);
+    short leanVacationDays = CalcVacationDays(date1, date2);
 
     cout << "Total Calendar Days: " << dayBetweenTwoDates << endl;
-    cout << "Actual Working (Lean) Vacation Days: " << leanDays << endl;
+    cout << "Actual Working (Lean) Vacation Days: " << leanVacationDays << endl;
 
     return 0;
 }
